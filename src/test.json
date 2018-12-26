@@ -20,6 +20,11 @@
     ],
     "tiles": [],
     "entities": [
-        ["class", 10, 10]
+        {
+            "name": "tester",
+            "x": 100,
+            "y": 100,
+            "args": {}
+        }
     ]
 }

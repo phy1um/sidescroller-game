@@ -14,6 +14,12 @@ function Room.create(loader)
     return r
 end
 
+function Room.enter(entityList, r)
+    for _,e in ipairs(r.entityPlaces) do
+        entityList.spawnNamed(e.x, e.y, e.name, e.args)
+    end
+end
+
 function Room.testCollision(r, x, y)
     if x >= 0 and x < r.pixelWidth and y >= 0 and y < r.pixelHeight then
         local ix, iy = math.floor(x/gridW)+1, math.floor(y/gridH)+1
@@ -62,6 +68,9 @@ function Room.getTestLoader()
         }
     end
     function l.buildTiles() 
+        return {}
+    end
+    function l.getEntityPlaces()
         return {}
     end
     return l

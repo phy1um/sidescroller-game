@@ -6,7 +6,8 @@ function Env.makeList()
     local entity_list = {}
     local entity_unique_id = 0
 
-    function Entity.spawn(x, y, class) 
+    function Entity.spawn(x, y, class, args) 
+        args = args or {}
         local e = {
             x = x,
             y = y,
@@ -19,7 +20,7 @@ function Env.makeList()
             }
         }
         entity_unique_id = entity_unique_id + 1
-        class.init(e)
+        class.init(e, args)
         --table.append(entity_list,e)
         entity_list[#entity_list+1]=e
     end

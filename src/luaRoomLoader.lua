@@ -14,6 +14,9 @@ function loader.fromFile(fname)
     function l.buildTiles()
         return levelData.tiles 
     end
+    function l.getEntityPlaces()
+        return levelData.entities
+    end
     return l
 end
 
