@@ -1,55 +1,21 @@
 
-
-local Room = require 'room'
-local World = require 'world'
---local room = Room.create(Room.getTestLoader())
+local entity = require 'entity'
 local luaRoom = require 'luaRoomLoader'
-local room = Room.create(luaRoom.fromFile('test.json'))
+local initRoom = luaRoom.fromFile('test.json')
 
-local message = "Game running..."
+entity.spawnRoot()
+local root = entity.getRoot() 
 
-local c = {}
-function c.init(x)
-    x.foo = "foo"
-end 
-function c.draw(ctx, x)
-    local st = string.format("%d:%d", x.x, x.y)
-    love.graphics.print(st, x.x - 10, x.y - 30)
-    love.graphics.circle("fill", x.x, x.y, 10)
-end
-function c.update(dt, ctx, x)
-    local dx, dy = 0,0
-    if love.keyboard.isDown("w") then
-        dy = -2.2
-    elseif love.keyboard.isDown("s") then
-        dy = 2.2
-    end
-
-    if love.keyboard.isDown("a") then
-        dx = -2.2
-    elseif love.keyboard.isDown("d") then
-        dx = 2.2
-    end
-
-    if not Room.testCollision(ctx.room, x.x + dx, x.y + dy) then
-        x.x = x.x + dx
-        x.y = x.y + dy
-    end
-end
-  
-World.defineClass(c, "tester")
---World.entity.spawn(100, 100, c)
-World.setRoom(room)
+require 'vec2'
+require 'testPlayer'
+require 'textDisplay'
 
 function love.draw()
-    Room.draw(World.room)
-    World.entity.draw(World)
-    love.graphics.setColor(0,0,0)
-    love.graphics.print(message, 10, 10)
+    root:fire("draw")
 end
 
 function love.update(dt)
-    World.update(dt)
+    root:fire("update", {dt})
 end
 
 function love.quit()

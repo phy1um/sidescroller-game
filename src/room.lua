@@ -19,10 +19,12 @@ function Room.create(loader)
     return r
 end
 
-function Room.testCollision(r, x, y)
-    if x >= 0 and x < r.pixelWidth and y >= 0 and y < r.pixelHeight then
+function Room.testCollisionMap(m, x, y)
+    local pixelHeight = #m * gridH
+    local pixelWidth = #m[0] * gridW
+    if x >= 0 and x < pixelWidth and y >= 0 and y < pixelHeight then
         local ix, iy = math.floor(x/gridW)+1, math.floor(y/gridH)+1
-        return r.map[iy][ix] ~= 0
+        return m[iy][ix] ~= 0
     else
         return true
     end

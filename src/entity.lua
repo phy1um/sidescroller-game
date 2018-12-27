@@ -1,3 +1,5 @@
+local log = require 'log'
+
 local component_class_list = {}
 local super = {}
 local super_class_name = "__super"
@@ -11,8 +13,9 @@ local function componentAttach(e, name, other)
     if ~e:has(name) then
         e._components[name] = other
         other._ref = other._ref + 1
+        other._parent = e
     else
-        log:error("Cannot attach duplicate " .. name .. " to " .. e._class.name)
+        log.error("Cannot attach duplicate " .. name .. " to " .. e._class.name)
     end
 end
 
@@ -42,7 +45,7 @@ local function componentEvent(self, event)
     if self[handler] then
         self[handler](event)
     else
-        log:warn("Could not handle event " .. event.name ..
+        log.warn("Could not handle event " .. event.name ..
          " in class " .. self._class.name)
     end
 
@@ -95,22 +98,25 @@ local roomComponent = {
 
 function roomComponent:init(e, args)
     if args.loader then
-        e.map = args.loader.buildMap()
-        e.tiles = args.loader.buildTiles()
-        e.entities = args.loader.getEntityPlaces()
+        e.initLoader = args.loader
     else 
-        log:error("No loader specified for initial room")
+        log.error("No loader specified for initial room")
     end
 end
 
 function roomComponent:load(loader)
+    local loader = loader or self.initLoader
     root.event("roomLeave")
     -- make sure there are no stray events
     root.flushEvents()
-    e.map = args.loader.buildMap()
-    e.tiles = args.loader.buildTiles()
-    e.entities = args.loader.getEntityPlaces()
-    root.event("roomEnter")
+    e.map = loader.buildMap()
+    e.tiles = loader.buildTiles()
+    e.entities = {}
+    local entitySpawn = loader.getEntityPlaces()
+    for o,_ in pairs(entitySpawn) do
+        root:addEntity(spawn(o.name, o.args))
+    end
+    root.fire("roomEnter")
 end
 
 local function define(name, class)
@@ -120,7 +126,7 @@ end
 local function spawn(class, args)
     local e = {}
     local c = component_class_list[class]
-    c:init(e)
+    c:init(e, args)
     root:addEntity(e)
 end
 
@@ -137,3 +143,54 @@ function spawnRoot(initRoom)
        "timer4": {}
    }
 end
+
+function root:fire(event)
+    local ev = event
+    if type event == "string" then
+        local tmp = event    
+        event = { "name": tmp } 
+    end
+    local name = event.name
+    local fn = "on" .. name
+    if self.eventListeners[name] then
+        for o in pairs(self.eventListeners[name]) do
+            if o[fn] then
+                o[fn](o, event)
+            else
+                log.warn("No handler for event " .. fn
+                 .. " in class " .. o._class.name)
+            end
+        end
+    end
+end
+
+function root:flushEvents()
+end
+
+function root:getPosition(e)
+    local x,y = 0,0
+    if e._parent then
+        x,y = self:getPosition(e._parent)
+    end
+    if e.position then
+        x = x + e.position.x
+        y = y + e.position.y
+    end
+    return x,y
+end
+
+function root:addEntity(e)
+    table.append(self.room.entities, e)
+end
+
+function root:collidesPoint(e, x, y)
+    return Room.testCollisionMap(self.room.map, x,y)
+end
+
+return {
+    "spawn": spawn,
+    "define": define,
+    "spawnRoot": spawnRoot,
+    "superObject": super,
+    "getRoot": function() return root end
+}
