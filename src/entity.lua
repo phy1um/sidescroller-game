@@ -1,81 +1,139 @@
+local component_class_list = {}
+local super = {}
+local super_class_name = "__super"
+local export = {}
+local root = {}
 
-local Env = {}
-local class_list = {}
-function Env.makeList() 
-    local Entity = {}
-    local entity_list = {}
-    local entity_unique_id = 0
+super.name = super_class_name
+super.super = nil
 
-    function Entity.spawn(x, y, class, args) 
-        args = args or {}
-        local e = {
-            x = x,
-            y = y,
-            w = class.w,
-            h = class.h,
-            id = entity_unique_id,
-            class = class,
-            image_data = {
-                frame = 0,
-            }
-        }
-        entity_unique_id = entity_unique_id + 1
-        class.init(e, args)
-        --table.append(entity_list,e)
-        entity_list[#entity_list+1]=e
+local function componentAttach(e, name, other)
+    if ~e:has(name) then
+        e._components[name] = other
+        other._ref = other._ref + 1
+    else
+        log:error("Cannot attach duplicate " .. name .. " to " .. e._class.name)
     end
+end
 
-    function Entity.spawnNamed(x, y, name, args)
-        local c = class_list[name]
-        if c ~= nil then
-            Entity.spawn(x, y, c, args)
-        else
-            print("Unknown class " .. name)
+local function componentDetach(e, name)
+    if e:has(name) then
+        local tmp = e._components[name]
+        e._components[name] = nil
+        tmp._ref = tmp._ref - 1
+        if tmp._ref <= 0 then
+            tmp:delete()
         end
     end
+    -- do nothing on detatch superfluous
+end
 
-    function Entity.remove(e) 
-        table.remove(e)
+local function componentDelete(self)
+    for name in pairs(self._components) do
+        self:detach(name)
+    end
+    for ev,_ in pairs(self._events) do
+        root.eventHandlers[ev][self] = nil
+    end
+end
+
+local function componentEvent(self, event)
+    local handler = "on" .. event.name
+    if self[handler] then
+        self[handler](event)
+    else
+        log:warn("Could not handle event " .. event.name ..
+         " in class " .. self._class.name)
     end
 
-    function Entity.clear()
-        entity_list = {}
-    end
+end
 
-    function Entity.collidesPoint(x, y) 
-        local ids = {}
-        for _, e in pairs(entity_list) do
-            if e.x >= x and e.y >= y and e.x + e.w <= x
-            and e.y + e.h <= h then
-                table.append(ids,e)
+local function extend(self, child)
+    local newClass = self
+    for k,v in pairs(child) do
+        if type(child[k]) == "function" and type(self[k]) == "function" then
+            newClass[k] = function(e, args)
+                self[k](e, args)
+                child[k](e, args)
             end
-        return ids
+        else 
+            newClass[k] = child[k]
         end
     end
+    newClass.extend = extend
+end
 
-    function Entity.draw(ctx) 
-        love.graphics.setColor(255,0,0)
-        for _,e in ipairs(entity_list) do
-            e.class.draw(ctx, e)
-        end
+local function listenFor(self, event)
+    table.append(self._events, event)
+    if ~root.eventListeners[event] then
+        root.eventListeners[event] = {}
     end
+    table.append(root.eventListeners[event], self)
+end
 
-    function Entity.update(dt, ctx) 
-        for _,e in ipairs(entity_list) do
-            e.class.update(dt, ctx, e)
-        end
+super.extend = extend
+function super:init(e)
+    e._components = {}
+    e._events = {}
+    e._parent = nil
+    e._ref = 0
+    e._class = self
+    if self.super then
+        e.super = self.super
     end
-
-    return Entity
+    e.attach = componentAttach
+    e.detach = componentDetach
+    e.delete = componentDelete
+    e.handleEvent = componentEvent
+    e.listenFor = listenFor
 end
 
-function Env.extend(to, from)
-    to.super = from
+local roomComponent = {
+    "name": "__room_component"
+    "super": super
+}
+
+function roomComponent:init(e, args)
+    if args.loader then
+        e.map = args.loader.buildMap()
+        e.tiles = args.loader.buildTiles()
+        e.entities = args.loader.getEntityPlaces()
+    else 
+        log:error("No loader specified for initial room")
+    end
 end
 
-function Env.defineClass(class, name)
-    class_list[name] = class
-    print("Defined entity class named " .. name)
+function roomComponent:load(loader)
+    root.event("roomLeave")
+    -- make sure there are no stray events
+    root.flushEvents()
+    e.map = args.loader.buildMap()
+    e.tiles = args.loader.buildTiles()
+    e.entities = args.loader.getEntityPlaces()
+    root.event("roomEnter")
 end
 
-return Env
+local function define(name, class)
+    component_class_list[name] = class
+end
+
+local function spawn(class, args)
+    local e = {}
+    local c = component_class_list[class]
+    c:init(e)
+    root:addEntity(e)
+end
+
+define("__room", super:extend(roomComponent))
+
+function spawnRoot(initRoom)
+   root:attach("room", spawn("__room", {
+       "loader": initRoom
+   }))
+   root.eventListeners = {
+       "update": {}, "draw": {}, "roomEnter": {}, "roomLeave": {}, 
+       "keyboard": {}, "mouseClick": {}, "collides": {}, 
+       "timer0": {}, "timer1": {}, "timer2": {}, "timer3": {},
+       "timer4": {}
+   }
+end
