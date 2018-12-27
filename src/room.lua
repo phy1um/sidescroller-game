@@ -11,13 +11,12 @@ function Room.create(loader)
     r.map = loader.buildMap();
     r.tiles = loader.buildTiles()
     r.entityPlaces = loader.getEntityPlaces()
-    return r
-end
-
-function Room.enter(entityList, r)
-    for _,e in ipairs(r.entityPlaces) do
-        entityList.spawnNamed(e.x, e.y, e.name, e.args)
+    function r.enter(entityList)
+        for _,e in ipairs(r.entityPlaces) do
+            entityList.spawnNamed(e.x, e.y, e.name, e.args)
+        end
     end
+    return r
 end
 
 function Room.testCollision(r, x, y)
@@ -74,10 +73,6 @@ function Room.getTestLoader()
         return {}
     end
     return l
-end
-
-function Room.getJsonLoader()
-
 end
 
 return Room

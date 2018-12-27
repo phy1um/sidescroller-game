@@ -25,8 +25,13 @@ function Env.makeList()
         entity_list[#entity_list+1]=e
     end
 
-    function Entity.spawnNamed(x, y, name)
-        Entity.spawn(x, y, class_list[name])
+    function Entity.spawnNamed(x, y, name, args)
+        local c = class_list[name]
+        if c ~= nil then
+            Entity.spawn(x, y, c, args)
+        else
+            print("Unknown class " .. name)
+        end
     end
 
     function Entity.remove(e) 
@@ -70,6 +75,7 @@ end
 
 function Env.defineClass(class, name)
     class_list[name] = class
+    print("Defined entity class named " .. name)
 end
 
 return Env

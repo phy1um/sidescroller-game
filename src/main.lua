@@ -5,7 +5,7 @@ local World = require 'world'
 --local room = Room.create(Room.getTestLoader())
 local luaRoom = require 'luaRoomLoader'
 local room = Room.create(luaRoom.fromFile('test.json'))
-World.setRoom(room)
+
 local message = "Game running..."
 
 local c = {}
@@ -36,8 +36,10 @@ function c.update(dt, ctx, x)
         x.y = x.y + dy
     end
 end
-    
-World.entity.spawn(100, 100, c)
+  
+World.defineClass(c, "tester")
+--World.entity.spawn(100, 100, c)
+World.setRoom(room)
 
 function love.draw()
     Room.draw(World.room)

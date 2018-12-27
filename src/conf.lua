@@ -3,5 +3,5 @@ function love.conf(t)
     t.window.height = 480
     t.title = "untitled game"
     t.window.borderless = false 
-
+    t.console = true
 end
