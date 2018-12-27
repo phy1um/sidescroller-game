@@ -26,9 +26,9 @@ function c:onupdate(ev)
     end
 
     dx, dy = dx*dt, dy*dt
-    local tx, ty = self.position:add(dx, dy)
+    local tx, ty = self:has("position"):add(dx, dy)
     if not root:collidesPoint(tx, ty) then
-        self.position:translate(dx, dy)
+        self:has("position"):translate(dx, dy)
     end
 end
 

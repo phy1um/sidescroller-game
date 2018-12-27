@@ -5,6 +5,8 @@ local super = {}
 local super_class_name = "__super"
 local export = {}
 local root = {}
+local json = require 'json'
+local inspect = require 'inspect'
 
 super.name = super_class_name
 super.super = nil
@@ -63,9 +65,9 @@ local function extend(self, child)
     local newClass = copy(self)
     for k,v in pairs(child) do
         if type(child[k]) == "function" and k ~= "extend" then
-            newClass[k] = function(e, args)
-                self[k](e, args)
-                child[k](e, args)
+            newClass[k] = function(me, e, args)
+                self[k](me, e, args)
+                child[k](me, e, args)
             end
         else 
             newClass[k] = child[k]
@@ -73,6 +75,7 @@ local function extend(self, child)
     end
     newClass.extend = extend
     newClass.super = self
+    return newClass
 end
 
 local function listenFor(self, event)
@@ -84,7 +87,7 @@ local function listenFor(self, event)
 end
 
 local function has(self, name)
-    return self[name]
+    return self._components[name]
 end
 
 super.extend = extend
@@ -109,10 +112,11 @@ local roomComponent = {}
 roomComponent.name = "__room_component"
 
 function roomComponent:init(e, args)
-    if args.loader then
-        e.initLoader = args.loader
+    if args == nil or args.loader == nil then
+        log.error("Must specify loader in args for room:init")
+        love.event.quit()
     else 
-        log.error("No loader specified for initial room")
+        e.initLoader = args.loader
     end
 end
 
@@ -121,9 +125,9 @@ function roomComponent:load(loader)
     root.event("roomLeave")
     -- make sure there are no stray events
     root.flushEvents()
-    e.map = loader.buildMap()
-    e.tiles = loader.buildTiles()
-    e.entities = {}
+    self.map = loader.buildMap()
+    self.tiles = loader.buildTiles()
+    self.entities = {}
     local entitySpawn = loader.getEntityPlaces()
     for o,_ in pairs(entitySpawn) do
         root:addEntity(spawn(o.name, o.args))
@@ -132,28 +136,50 @@ function roomComponent:load(loader)
 end
 
 local function define(name, class)
-    component_class_list[name] = class
+    if class == nil then
+        log.error("Nil class provided in definition for " .. name)
+        love.event.quit()
+    else 
+        component_class_list[name] = class
+    end
 end
 
 local function spawn(class, args)
     local e = {}
     local c = component_class_list[class]
-    if c then
+    if c ~= nil then
         c:init(e, args)
         root:addEntity(e)
+        return e
     else
         log.error("Could not spawn class " .. class)
+        return nil
     end
-    return e
 end
 
 define("__room", super:extend(roomComponent))
 
 function spawnRoot(initRoom)
-   super:init(root)
-   root:attach("room", spawn("__room", {
-       loader= initRoom
-   }))
+    super:init(root)
+    local roomClass = component_class_list["__room"]
+    if roomClass == nil then
+        log.error("No class defined for __room, cannot init root")
+    end
+    local room = {}
+    roomClass:init(room, {loader=initRoom})
+    root:attach("room", room)
+    log.info("Attached room to root")
+    if not root:has("room") then
+        log.error("Failed to load room component for root")
+        love.event.quit()
+    end
+    root:dump()
+    room._class.load(room)
+    local r = root:has("room")
+    if r.map == nil or r.entities == nil then
+        log.error("Failed to initialize room component")
+        love.event.quit()
+    end
    root.eventListeners = {
        update= {}, draw= {}, roomEnter= {}, roomLeave= {}, 
        keyboard= {}, mouseClick= {}, collides= {}, 
@@ -188,19 +214,24 @@ function root:getPosition(e)
     if e._parent then
         x,y = self:getPosition(e._parent)
     end
+    local pos = e:has("position")
     if e.position then
-        x = x + e.position.x
-        y = y + e.position.y
+        x = x + pos.x
+        y = y + pos.y
     end
     return x,y
 end
 
 function root:addEntity(e)
-    table.append(self.room.entities, e)
+    table.append(self:has("room").entities, e)
 end
 
 function root:collidesPoint(e, x, y)
-    return Room.testCollisionMap(self.room.map, x,y)
+    return Room.testCollisionMap(self:has("room").map, x,y)
+end
+
+function root:dump()
+    log.debug(inspect(self))
 end
 
 return {
