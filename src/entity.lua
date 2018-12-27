@@ -10,9 +10,9 @@ super.name = super_class_name
 super.super = nil
 
 local function componentAttach(e, name, other)
-    if ~e:has(name) then
+    if not e:has(name) then
         e._components[name] = other
-        other._ref = other._ref + 1
+        other._ref = other._ref or 0 + 1
         other._parent = e
     else
         log.error("Cannot attach duplicate " .. name .. " to " .. e._class.name)
@@ -51,10 +51,18 @@ local function componentEvent(self, event)
 
 end
 
+local function copy(o)
+    local cp = {}
+    for k,v in pairs(o) do
+        cp[k] = v
+    end
+    return cp
+end
+
 local function extend(self, child)
-    local newClass = self
+    local newClass = copy(self)
     for k,v in pairs(child) do
-        if type(child[k]) == "function" and type(self[k]) == "function" then
+        if type(child[k]) == "function" and k ~= "extend" then
             newClass[k] = function(e, args)
                 self[k](e, args)
                 child[k](e, args)
@@ -64,14 +72,19 @@ local function extend(self, child)
         end
     end
     newClass.extend = extend
+    newClass.super = self
 end
 
 local function listenFor(self, event)
     table.append(self._events, event)
-    if ~root.eventListeners[event] then
+    if not root.eventListeners[event] then
         root.eventListeners[event] = {}
     end
     table.append(root.eventListeners[event], self)
+end
+
+local function has(self, name)
+    return self[name]
 end
 
 super.extend = extend
@@ -89,12 +102,11 @@ function super:init(e)
     e.delete = componentDelete
     e.handleEvent = componentEvent
     e.listenFor = listenFor
+    e.has = has
 end
 
-local roomComponent = {
-    "name": "__room_component"
-    "super": super
-}
+local roomComponent = {}
+roomComponent.name = "__room_component"
 
 function roomComponent:init(e, args)
     if args.loader then
@@ -126,29 +138,33 @@ end
 local function spawn(class, args)
     local e = {}
     local c = component_class_list[class]
-    c:init(e, args)
-    root:addEntity(e)
+    if c then
+        c:init(e, args)
+        root:addEntity(e)
+    else
+        log.error("Could not spawn class " .. class)
+    end
+    return e
 end
 
 define("__room", super:extend(roomComponent))
 
 function spawnRoot(initRoom)
+   super:init(root)
    root:attach("room", spawn("__room", {
-       "loader": initRoom
+       loader= initRoom
    }))
    root.eventListeners = {
-       "update": {}, "draw": {}, "roomEnter": {}, "roomLeave": {}, 
-       "keyboard": {}, "mouseClick": {}, "collides": {}, 
-       "timer0": {}, "timer1": {}, "timer2": {}, "timer3": {},
-       "timer4": {}
+       update= {}, draw= {}, roomEnter= {}, roomLeave= {}, 
+       keyboard= {}, mouseClick= {}, collides= {}, 
    }
 end
 
 function root:fire(event)
     local ev = event
-    if type event == "string" then
+    if type(event) == "string" then
         local tmp = event    
-        event = { "name": tmp } 
+        event = { name= tmp } 
     end
     local name = event.name
     local fn = "on" .. name
@@ -188,9 +204,9 @@ function root:collidesPoint(e, x, y)
 end
 
 return {
-    "spawn": spawn,
-    "define": define,
-    "spawnRoot": spawnRoot,
-    "superObject": super,
-    "getRoot": function() return root end
+    spawn= spawn,
+    define= define,
+    spawnRoot= spawnRoot,
+    superObject= super,
+    getRoot= function() return root end
 }

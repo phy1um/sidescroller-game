@@ -1,8 +1,8 @@
-local class = {}
+local c = {}
 local entity = require 'entity'
 
-function class:init(e, args)
-    e:attach("position", entity:spawn("vec2", args))
+function c:init(e, args)
+    e:attach("position", entity.spawn("vec2", args))
 end 
 
 function c.ondraw()
@@ -32,6 +32,6 @@ function c:onupdate(ev)
     end
 end
 
-local r = entity.super:extend(c)
+local r = entity.superObject:extend(c)
 entity.define("testPlayer", r)
 return r

@@ -16,7 +16,7 @@ function vec2:translate(dx, dy)
     self.y = self.y + dy
 end
 
-local r = entity.super:extend(vec2)
+local r = entity.superObject:extend(vec2)
 entity.define("vec2", r)
 
 return r

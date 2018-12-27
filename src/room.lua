@@ -30,9 +30,9 @@ function Room.testCollisionMap(m, x, y)
     end
 end
 
-function Room.draw(r) 
+function Room.draw(map) 
     love.graphics.setColor(255,255,255)
-    for i,row in pairs(r.map) do
+    for i,row in pairs(map) do
         for j,col in pairs(row) do
             if(col == 1) then
                 love.graphics.rectangle("fill", 

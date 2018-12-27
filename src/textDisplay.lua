@@ -14,7 +14,7 @@ function class:ondraw()
     love.graphics.print(self.message, x, y)
 end
 
-local r = entity.super:extend(class)
+local r = entity.superObject:extend(class)
 entity.define("text", r)
 
 return r
