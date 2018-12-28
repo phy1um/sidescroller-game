@@ -2,6 +2,7 @@ local entity = require 'entity'
 local root = entity.getRoot()
 
 local class = {}
+class.name = "TextDisplay"
 function class:init(e)
     e.message = args.message
     e.font = args.font

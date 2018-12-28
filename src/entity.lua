@@ -50,12 +50,14 @@ local function componentEvent(self, event)
         log.warn("Could not handle event " .. event.name ..
          " in class " .. self._class.name)
     end
-
 end
 
 local function copy(o)
     local cp = {}
     for k,v in pairs(o) do
+         if type(v) == "table" then
+            v = copy(v)
+         end
         cp[k] = v
     end
     return cp
@@ -64,7 +66,7 @@ end
 local function extend(self, child)
     local newClass = copy(self)
     for k,v in pairs(child) do
-        if type(child[k]) == "function" and k ~= "extend" then
+        if type(child[k]) == "function" and type(self[k]) == "function" and k ~= "extend" then
             newClass[k] = function(me, e, args)
                 self[k](me, e, args)
                 child[k](me, e, args)
@@ -75,22 +77,50 @@ local function extend(self, child)
     end
     newClass.extend = extend
     newClass.super = self
+    log.info("Extended " .. self.name .. " to " .. child.name)
     return newClass
 end
 
 local function listenFor(self, event)
-    table.append(self._events, event)
-    if not root.eventListeners[event] then
+    log.info("Creating event for " .. event .. " in " .. self._class.name)
+    self._events[#self._events + 1] = event
+    if root.eventListeners[event] == nil then
+        log.info("Creating event for " .. event .. " in " .. self._class.name)
         root.eventListeners[event] = {}
     end
-    table.append(root.eventListeners[event], self)
+    local listeners = root.eventListeners[event]
+    listeners[#listeners + 1] = self
 end
 
 local function has(self, name)
     return self._components[name]
 end
 
+local function getPosition(self)
+    local x,y = 0,0
+    if self._parent ~= nil then
+        x,y = self._parent:getPosition()
+    end
+    if self:has("position") then
+        x, y = x + self:has("position").x, y + self:has("position").y
+    end
+    return x,y
+end
+
 super.extend = extend
+super.methods = {
+    attach = componentAttach,
+    detach = componentDetatch,
+    handleEvent = componentEvent,
+    listenFor = listenFor,
+    has = has,
+    getPosition = getPosition
+}
+
+function super:addMethod(name, fn)
+    self.methods[name] = fn
+end
+
 function super:init(e)
     e._components = {}
     e._events = {}
@@ -100,39 +130,9 @@ function super:init(e)
     if self.super then
         e.super = self.super
     end
-    e.attach = componentAttach
-    e.detach = componentDetach
-    e.delete = componentDelete
-    e.handleEvent = componentEvent
-    e.listenFor = listenFor
-    e.has = has
-end
-
-local roomComponent = {}
-roomComponent.name = "__room_component"
-
-function roomComponent:init(e, args)
-    if args == nil or args.loader == nil then
-        log.error("Must specify loader in args for room:init")
-        love.event.quit()
-    else 
-        e.initLoader = args.loader
+    for k,v in pairs(self.methods) do
+        e[k] = v
     end
-end
-
-function roomComponent:load(loader)
-    local loader = loader or self.initLoader
-    root.event("roomLeave")
-    -- make sure there are no stray events
-    root.flushEvents()
-    self.map = loader.buildMap()
-    self.tiles = loader.buildTiles()
-    self.entities = {}
-    local entitySpawn = loader.getEntityPlaces()
-    for o,_ in pairs(entitySpawn) do
-        root:addEntity(spawn(o.name, o.args))
-    end
-    root.fire("roomEnter")
 end
 
 local function define(name, class)
@@ -157,10 +157,12 @@ local function spawn(class, args)
     end
 end
 
-define("__room", super:extend(roomComponent))
-
 function spawnRoot(initRoom)
     super:init(root)
+    root.eventListeners = {
+       update= {}, draw= {}, roomEnter= {}, roomLeave= {}, 
+       keyboard= {}, mouseClick= {}, collides= {}, 
+    }
     local roomClass = component_class_list["__room"]
     if roomClass == nil then
         log.error("No class defined for __room, cannot init root")
@@ -173,17 +175,14 @@ function spawnRoot(initRoom)
         log.error("Failed to load room component for root")
         love.event.quit()
     end
-    root:dump()
-    room._class.load(room)
+    room:load(initRoom)
+    room:listenFor("draw")
     local r = root:has("room")
     if r.map == nil or r.entities == nil then
         log.error("Failed to initialize room component")
         love.event.quit()
     end
-   root.eventListeners = {
-       update= {}, draw= {}, roomEnter= {}, roomLeave= {}, 
-       keyboard= {}, mouseClick= {}, collides= {}, 
-   }
+   
 end
 
 function root:fire(event)
@@ -193,9 +192,11 @@ function root:fire(event)
         event = { name= tmp } 
     end
     local name = event.name
+    --log.info("Event "  .. event.name)
     local fn = "on" .. name
     if self.eventListeners[name] then
-        for o in pairs(self.eventListeners[name]) do
+        --log.debug("Event listeners: " .. #self.eventListeners[name])
+        for _,o in pairs(self.eventListeners[name]) do
             if o[fn] then
                 o[fn](o, event)
             else
@@ -223,11 +224,17 @@ function root:getPosition(e)
 end
 
 function root:addEntity(e)
-    table.append(self:has("room").entities, e)
+    local tb = self:has("room").entities
+    tb[#tb + 1] = e
 end
 
-function root:collidesPoint(e, x, y)
-    return Room.testCollisionMap(self:has("room").map, x,y)
+function root:collidesPoint(x, y)
+    if x == nil or y == nil then
+        log.error("NIL in collidesPoint")
+        return true
+    else
+        return self:has("room"):testCollisionMap(x,y)
+    end
 end
 
 function root:dump()

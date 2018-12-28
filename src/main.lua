@@ -6,21 +6,16 @@ local log = require 'log'
 local luaRoom = require 'luaRoomLoader'
 local initRoom = luaRoom.fromFile('test.json')
 
-entity.spawnRoot(initRoom)
-local root = entity.getRoot() 
-
 require 'vec2'
 require 'testPlayer'
 require 'textDisplay'
 
+entity.spawnRoot(initRoom)
+local root = entity.getRoot() 
+
+
 function love.draw()
-        if root:has("room") and root:has("room").map then
-            room.draw(root:has("room").map)
-        else
-            log.warn("No room to draw in root object")
-            love.event.quit()
-        end
-        root:fire("draw")
+    root:fire("draw")
 end
 
 function love.update(dt)
