@@ -229,11 +229,15 @@ function root:addEntity(e)
 end
 
 function root:collidesPoint(x, y)
-    if x == nil or y == nil then
-        log.error("NIL in collidesPoint")
-        return true
-    else
-        return self:has("room"):testCollisionMap(x,y)
+    return self:has("room"):testCollisionMap(x,y)
+end
+
+function root:entityHas(e, name)
+    local c = e:has(name)
+    if c.isEntity ~= true and c == nil and e._parent ~= nil then
+        return root:hasEntity(e._parent, name)
+    else 
+        return c
     end
 end
 

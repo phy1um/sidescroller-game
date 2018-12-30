@@ -7,6 +7,8 @@ local luaRoom = require 'luaRoomLoader'
 local initRoom = luaRoom.fromFile('test.json')
 
 require 'vec2'
+require 'aabb'
+require 'simpleMover'
 require 'testPlayer'
 require 'textDisplay'
 
@@ -31,5 +33,8 @@ function love.keypressed(key ,scan, isrepeat)
     if key == "escape" then
         message = "Quit!"
         love.event.quit()
+    end
+    if key == "p" then
+        root:dump()
     end
 end
