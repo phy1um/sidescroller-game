@@ -3,6 +3,7 @@ local entity = require 'entity'
 local root = entity.superObject
 local log = require 'log'
 local inspect = require 'inspect'
+local GRAV_MAX = 6
 
 local simpleMover = {}
 simpleMover.name = "SimpleMover"
@@ -19,9 +20,7 @@ simpleMover = entity.superObject:extend(simpleMover)
 simpleMover:addMethod("onupdate", function(self, ev)
     if self.vx == 0 and self.vy == 0 then return end
     local dt = ev.dt or 1
-    local dx,dy = self.vx, self.vy
-    dx, dy = dx*dt, dy*dt
-    local frict = self._parent:has("friction")
+        local frict = self._parent:has("friction")
     if frict ~= nil then
         local f = frict:get()
         if self.vx > 0 then
@@ -30,17 +29,19 @@ simpleMover:addMethod("onupdate", function(self, ev)
             self.vx = math.min(self.vx + f, 0)
         end
     end
+    local dx,dy = self.vx, self.vy
+    dx, dy = dx*dt, dy*dt
     local col = self._parent:has("collision")
     local pos =  self._parent:has("position")
     if col then
         local grav = self._parent:has("gravity")
         if grav ~= nil then
             local g = grav:get()
-            if not col:deltaPlaceFree(0, dy) then
+            if dy > 0 and not col:deltaPlaceFree(0, dy) then
                 self.vy = 0
                 col:moveToCollision(pos, 0, dy)
             else
-                self.vy = math.min(self.vy + g, 6)
+                self.vy = math.min(self.vy + g, GRAV_MAX)
             end
         end
         if col:deltaPlaceFree(dx, 0) then

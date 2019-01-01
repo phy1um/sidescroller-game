@@ -14,6 +14,7 @@ function c:init(e, args)
     e:attach("collision", entity.spawn("aabb", {w=20,h=20}))
     e:attach("friction", entity.spawn("friction", {friction=0.6}))
     e:attach("gravity", entity.spawn("gravity", {gravity=0.6}))
+    e:attach("textDisplay", entity.spawn("text", {message="Player", colour={r=255,g=0,b=0}}))
     e:listenFor("draw")
     e:listenFor("update")
     e.isEntity = true
@@ -30,15 +31,15 @@ end)
 player:addMethod("onupdate",  function(self, ev)
     local dx, dy = 0, 0
     if love.keyboard.isDown("w") then
-        dy = -2.2
-    elseif love.keyboard.isDown("s") then
-        dy = 2.2
+        if self:has("collision"):onGround() then
+            dy = -10.2
+        end
     end
 
     if love.keyboard.isDown("a") then
-        dx = -2.2
+        dx = -3.2
     elseif love.keyboard.isDown("d") then
-        dx = 2.2
+        dx = 3.2
     end
     if dx ~= 0 then 
         self:has("mover"):setHorizontal(dx)

@@ -25,6 +25,16 @@ aabb:addMethod("deltaPlaceFree", function(self, dx, dy)
     end
 end)
 
+aabb:addMethod("onGround", function(self)
+    local x,y = self:getPosition()
+    local w,h = self.w, self.h
+    local g = root:collidesPoint(x, y+h+1) or root:collidesPoint(x+w, y+h+1)
+    if g == true then
+        log.info("On ground")
+    end
+    return g
+end)
+
 aabb:addMethod("moveToCollision", function(self, pos, mx, my)
     if mx ~= 0 and mx ~= nil then
         local sign = 1
@@ -41,13 +51,16 @@ aabb:addMethod("moveToCollision", function(self, pos, mx, my)
     if my ~= 0  and my ~= nil then
         local sign = 1
         local moved = false
-        if my < 0 then sign = -1 end
+        if my > 0 then sign = -1 end
         for i=my,0,sign do
             if self:deltaPlaceFree(0, i) then
                 pos:translate(0, i)
                 moved = true
                 break
             end
+        end
+        if moved then
+            log.debug("Resolved collision down")
         end
     end
 end)
