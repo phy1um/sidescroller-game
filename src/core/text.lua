@@ -15,7 +15,7 @@ end
 local r = entity.superObject:extend(class)
 
 r:addMethod("ondraw", function(self)
-    local x,y = root:getPosition(self)
+    local x,y = self:getPosition()
     love.graphics.setColor(self.colour.r, self.colour.g, self.colour.b)
     love.graphics.print(self.message, x, y)
 end)

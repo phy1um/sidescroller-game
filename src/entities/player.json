@@ -1,0 +1,59 @@
+[
+    {
+        "name": "player",
+        "displayName": "Player-Test",
+        "components": [
+            {
+                "name": "position",
+                "class": "vec2",
+                "args": {
+                    "x": "$playerX",
+                    "y": "$playerY"
+                }
+            },
+            {
+                "name": "mover",
+                "class": "simpleMover"
+            },
+            {
+                "name": "collision",
+                "class": "aabb",
+                "args": {
+                    "w": 20,
+                    "h": 20
+                }
+            },
+            {
+                "name": "friction",
+                "class": "friction"
+            },
+            {
+                "name": "gravity",
+                "class": "gravity"
+            },
+            {
+                "name": "draw",
+                "class": "container",
+                "components": [
+                    {
+                        "name": "position",
+                        "class": "vec2",
+                        "args": {
+                            "x": 10,
+                            "y": 10
+                        }
+                    },
+                    {
+                        "name": "image",
+                        "class": "circle",
+                        "args": {
+                            "colour": [255, 255, 0],
+                            "radius": 10
+                        }
+                    }
+                ]
+            }
+        ],
+        "args": ["playerX", "playerY"]
+    }
+]
