@@ -1,5 +1,5 @@
 
-local entity = require 'entity'
+local entity = require 'core/entity'
 local root = entity.superObject
 local log = require 'log'
 local inspect = require 'inspect'

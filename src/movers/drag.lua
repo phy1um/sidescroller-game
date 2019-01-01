@@ -1,5 +1,5 @@
 
-local entity = require 'entity'
+local entity = require 'core/entity'
 local log = require 'log'
 local GRAVITY_DEFAULT = 1.6
 

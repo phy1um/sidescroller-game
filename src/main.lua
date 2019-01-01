@@ -1,16 +1,13 @@
 
 
-local room = require 'room'
-local entity = require 'entity'
-local log = require 'log'
-local luaRoom = require 'luaRoomLoader'
-local initRoom = luaRoom.fromFile('test.json')
+require 'loadClasses'
 
-require 'vec2'
-require 'aabb'
-require 'simpleMover'
-require 'testPlayer'
-require 'textDisplay'
+local room = require 'core/room'
+local entity = require 'core/entity'
+local log = require 'log'
+local luaRoom = require 'core/luaRoomLoader'
+
+local initRoom = luaRoom.fromFile('test.json')
 
 entity.spawnRoot(initRoom)
 local root = entity.getRoot() 

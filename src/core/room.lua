@@ -1,6 +1,6 @@
 
 local log = require 'log'
-local entity = require 'entity' 
+local entity = require 'core/entity' 
 
 local gridW = 32
 local gridH = 32

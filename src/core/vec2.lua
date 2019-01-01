@@ -1,5 +1,5 @@
 
-local entity = require 'entity'
+local entity = require 'core/entity'
 
 local vec2 = {}
 vec2.name = "Vector 2D"

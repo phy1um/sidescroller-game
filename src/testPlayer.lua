@@ -1,9 +1,8 @@
 local c = {}
-local entity = require 'entity'
+local entity = require 'core/entity'
 local root = entity.getRoot()
 local log = require 'log'
 
-require 'drag'
 
 c.name = "TestPlayer"
 
