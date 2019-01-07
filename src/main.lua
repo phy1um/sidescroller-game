@@ -1,16 +1,20 @@
 
 
-require 'loadClasses'
+local load = require 'loadClasses'
 
 local room = require 'core/room'
 local entity = require 'core/entity'
 local log = require 'log'
 local luaRoom = require 'core/luaRoomLoader'
 
+load.loadClassesFromFile("entities/player.json")
+
 local initRoom = luaRoom.fromFile('test.json')
 
 entity.spawnRoot(initRoom)
 local root = entity.getRoot() 
+
+--root:dump()
 
 
 function love.draw()

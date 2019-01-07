@@ -11,8 +11,6 @@ function simpleMover:init(e, args)
     e.vx = 0
     e.vy = 0
     e:listenFor("update")
-    log.debug("Simple Mover init:")
-    log.debug(inspect(e))
 end
 
 simpleMover = entity.superObject:extend(simpleMover)

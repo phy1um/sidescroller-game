@@ -6,7 +6,13 @@ prim.name = "Primitive"
 function prim:init(e, args)
     e:listenFor("draw")
     for k,v in pairs(args) do
-        e[k] = v
+        if k == "color" or k == "colour" then
+            e.r = v[1]
+            e.g = v[2]
+            e.b = v[3]
+        else
+            e[k] = v
+        end
     end
 end
 

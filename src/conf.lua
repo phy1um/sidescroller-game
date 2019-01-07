@@ -4,4 +4,6 @@ function love.conf(t)
     t.title = "untitled game"
     t.window.borderless = false 
     t.console = true
+    t.window.x = 72
+    t.window.y = 5
 end

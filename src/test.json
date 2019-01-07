@@ -21,10 +21,10 @@
     "tiles": [],
     "entities": [
         {
-            "name": "testPlayer",
+            "name": "player",
             "args": {
-                "x": 100,
-                "y": 100
+                "playerX": 100,
+                "playerY": 100
             }
         },
         {

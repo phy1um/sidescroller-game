@@ -1,7 +1,7 @@
 
 local entity = require 'core/entity'
 local cont = {}
-
+cont.name = "Container"
 function cont:init(e, args)
     return
 end

@@ -21,24 +21,18 @@ end
 
 local player = entity.superObject:extend(c)
 
-player:addMethod("onupdate",  function(self, ev)
-    local dx, dy = 0, 0
+player:addMethod("onupdate",  function(e, ev)
+
     if love.keyboard.isDown("w") then
-        if self._parent:has("collision"):onGround() then
-            dy = -10.2
+        if e._parent:has("collision"):onGround() then
+            e._parent:has("mover"):impulse("up")
         end
     end
 
     if love.keyboard.isDown("a") then
-        dx = -3.2
+        e._parent:has("mover"):impulse("left")
     elseif love.keyboard.isDown("d") then
-        dx = 3.2
-    end
-    if dx ~= 0 then 
-        self._parent:has("mover"):setHorizontal(dx)
-    end
-    if dy ~= 0 then
-        self._parent:has("mover"):setVertical(dy)
+        e._parent:has("mover"):impulse("right")
     end
 end)
 

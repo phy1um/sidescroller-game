@@ -157,6 +157,10 @@ local function spawn(class, args)
     end
 end
 
+local function getClass(name)
+    return component_class_list[name]
+end
+
 function spawnRoot(initRoom)
     super:init(root)
     root.eventListeners = {
@@ -250,5 +254,6 @@ return {
     define= define,
     spawnRoot= spawnRoot,
     superObject= super,
-    getRoot= function() return root end
+    getRoot= function() return root end,
+    getClass= getClass
 }

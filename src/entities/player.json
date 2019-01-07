@@ -13,7 +13,18 @@
             },
             {
                 "name": "mover",
-                "class": "simpleMover"
+                "class": "impulseMover",
+                "args": {
+                    "impulses": {
+                        "left": [-1.5, 0],
+                        "right": [1.5, 0],
+                        "up": [0, -8.2]
+                    },
+                    "hAccel": 0.8,
+                    "vAccel": 5.8,
+                    "hMax": 3,
+                    "vMax": 12
+                }
             },
             {
                 "name": "collision",
@@ -52,6 +63,10 @@
                         }
                     }
                 ]
+            },
+            {
+                "name": "controller",
+                "class": "testPlayerControl"
             }
         ],
         "args": ["playerX", "playerY"]
