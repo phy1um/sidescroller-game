@@ -1,24 +1,27 @@
 
 local entity = require 'core/entity'
+local inspect = require 'inspect'
+local log = require 'log'
 
 local impulse = {}
 impulse.name = "Impulse Mover"
 
 function impulse:init(e, args)
     e.impulses = {}
+    e.active = {}
     for k,v in pairs(args.impulses) do
         e.impulses[k] = v
+        e.active[k] = 0
     end
     e.hAccel = args.hAccel
     e.vAccel = args.vAccel
-    e.hMax = args.hMax or 20
-    e.vMax = args.vMax or 20
+    e.hMax = args.hMax
+    e.vMax = args.vMax
     e.vx = 0
     e.vy = 0
-    e.imX = 0
-    e.imY = 0
     e.simpleMoverClass = entity.getClass("simpleMover")
     e:listenFor("update")
+    e:listenFor("draw")
 end
 
 impulse = entity.superObject:extend(impulse)
@@ -30,30 +33,28 @@ function sign(x)
     end
 end
 
-impulse:addMethod("onupdate", function(e, args)
-    local absX = math.abs(e.imX)
-    local absY = math.abs(e.imY)
-    local dx = math.min(absX, e.hAccel) * sign(e.imX)
-    local dy = math.min(absY, e.vAccel) * sign(e.imY)
-    e.vx = e.vx + dx
-    e.vy = e.vy + dy
-    e.imX = e.imX - dx
-    e.imY = e.imY - dy
-    if math.abs(e.imX) < 0.05 then
-        e.imX = 0
-    end
-    if math.abs(e.imY) < 0.05 then
-        e.imY = 0
-    end
+impulse:addMethod("ondraw", function(e)
+    local px, py = e:getPosition()
+    love.graphics.print(e.vx, px, py - 15)
+end)
 
+impulse:addMethod("onupdate", function(e, args)
+    for im, duration in pairs(e.active) do
+        if duration ~= nil and duration > 0 then
+            local p = e.impulses[im]
+            local sumX = e.vx + p.dx
+            e.vx = math.min(math.abs(sumX), p.hMax or 999) * sign(sumX)
+            local sumY = e.vy + p.dy
+            e.vy = math.min(math.abs(sumY), p.vMax or 999) * sign(sumY)
+            e.active[im] = e.active[im] - 1
+        end
+    end
     e.simpleMoverClass.methods.onupdate(e, args)
 
 end)
 
 impulse:addMethod("impulse", function(e, im)
-    local imx, imy = e.impulses[im][1], e.impulses[im][2]
-    e.imX = imx or 0
-    e.imY = imy or 0
+    e.active[im] = e.impulses[im].duration
 end)
 
 entity.define("impulseMover", impulse)

@@ -9,35 +9,42 @@ function markerClass:init(e, args)
     for k,v in pairs(args.fields) do
         e[k] = v
     end
+    register(e)
 end
 
 markerClass = entity.superObject:extend(markerClass)
 entity.define("marker", markerClass)
 
-local markerProvider = {}
-markerProvider.name = "Marker Service"
-function markerProvider:init(e, args)
-    e.markers = {}
+local markerTargeter = {}
+markerTargeter.name = "Marker Targeter"
+function markerTargeter:init(e, args)
+    e.target = args.target
 end
 
-markerProvider = entity.superObject:extend(markerProvider)
+markerTargeter = entity.superObject:extend(markerTargeter)
 
-markerProvider:addMethod("register", function(e)
-    if self.markers[e.name] == nil then
-        self.markers[e.name] = e
-    end
+markerTargeter:addMethod("getPosition", function(e)
+    local target = markerList[e.target]
+    return target:getPosition()
 end)
 
-markerProvider:addMethod("unregister", function(e)
-    if type(e) == "string" then 
-        self.markers[e] = nil
-    else
-        self.markers[e.name] = nil
-    end
-end)
+entity.define("targetMarker", markerTargeter)
 
-markerProvider:addMethod("get", function(name)
-    return self.markers[name]
-end)
+local markerList = {}
+function register(m)
+    markerList[m.name] = m    
+end
 
-entity.define("markerProvider", markerProvider)
+function unregister(m)
+    markerList[m.name] = nil
+end
+
+function get(name)
+    return markerList[name]
+end
+
+return {
+    register = register,
+    unregister = unregister,
+    get = get
+}

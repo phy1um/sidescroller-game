@@ -16,9 +16,9 @@
                 "class": "impulseMover",
                 "args": {
                     "impulses": {
-                        "left": [-1.5, 0],
-                        "right": [1.5, 0],
-                        "up": [0, -8.2]
+                        "left": {"dx": -1.2, "dy": 0, "hMax": 4.2, "duration": 1},
+                        "right": {"dx": 1.2, "dy": 0, "hMax": 4.2, "duration": 1},
+                        "up": {"dx": 0, "dy": -4.2, "vMax": 12, "duration": 6}
                     },
                     "hAccel": 0.8,
                     "vAccel": 5.8,
